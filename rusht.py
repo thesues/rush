@@ -1,12 +1,16 @@
-import collections
-import pdb
 # vim: tabstop=4 shiftwidth=4 softtabstop=4 et
+import collections
+import pygraphviz as pgv
+import pdb
 LEAF, INTER = ("LEAF", "INTER")
 class Node:
     def __init__(self, flavor, identity, weight):
         self.flavor = flavor
         self.identity = identity
         self.weight = weight
+
+    def string(self):
+        return bin(self.identity)[2:] + ":" + str(self.weight)
 
 #self.root[0] =>           [node0]
 #self.root[1] =>        [node1, node2]
@@ -19,6 +23,8 @@ class RushTree:
         self.depth = 1
         #point to the last inserted
         self.last = 0
+        #for draw
+        self.G = pgv.AGraph(directed=True)
 
     def insert_node(self):
         #get last line
@@ -70,17 +76,72 @@ class RushTree:
 
     def print_me(self):
         i = 0
-        print self.last + 1
+        print "total objects:%d" %  (self.last + 1)
         while i < self.depth:
-            print "depth %d"  % (i + 1)
+            print "depth %d" % (i)
             for j in self.root[i]:
-                print "%s:%d" % (bin(j.identity)[2:] , j.weight)
-
+                print "%s" % (j)
             i += 1
+
+    def get_leftchild(self, depth, pos):
+        if depth + 1 > self.depth:
+            return None
+        try:
+            self.root[depth][2*pos]
+        except:
+            return None
+        return (depth+1, 2*pos)
+
+    def get_rightchild(self,depth,pos):
+        if depth + 1 > self.depth:
+            return None
+        try:
+            #depth + 1 is next depth
+            #depth + 1 - 1 is for offset
+            self.root[depth][2*pos + 1]
+        except:
+            return None
+        return (depth+1, 2*pos + 1)
+
+    def get_node(self,depth,pos):
+        return self.root[depth-1][pos]
+
+    def iterate_LHR(self,depth,pos):
+        left_child = self.get_leftchild(depth,pos)
+        if left_child:
+            for i in self.iterate_LHR(*left_child):
+                yield i
+
+        yield self.get_node(depth, pos)
+
+        right_child = self.get_rightchild(depth,pos)
+        if right_child:
+            for i in self.iterate_LHR(*right_child):
+                yield i
+
+    def out_graph(self):
+        self.generate_graph(1,0)
+        print self.G
+        self.G.layout('dot')
+        self.G.draw('tree.png')
+
+    def generate_graph(self,depth,pos):
+        left_child = self.get_leftchild(depth,pos)
+        if left_child:
+            self.G.add_edge(self.get_node(depth,pos).string(), self.get_node(*left_child).string())
+            self.generate_graph(*left_child)
+
+        right_child = self.get_rightchild(depth,pos)
+        if right_child:
+            self.G.add_edge(self.get_node(depth,pos).string(), self.get_node(*right_child).string())
+            self.generate_graph(*right_child)
+
+
+
 
 t = RushTree()
 t.insert_node()
 t.insert_node()
 t.insert_node()
 t.insert_node()
-t.print_me()
+t.out_graph()
