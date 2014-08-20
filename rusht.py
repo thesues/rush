@@ -10,7 +10,8 @@ class Node:
         self.weight = weight
 
     def string(self):
-        return bin(self.identity)[2:] + ":" + str(self.weight)
+        return bin(self.identity)[2:]
+
 
 #self.root[0] =>           [node0]
 #self.root[1] =>        [node1, node2]
@@ -28,7 +29,9 @@ class RushTree:
         gv.setv(self.G, 'nodesep', '0.05')
         gv.setv(self.G, 'rankdir', 'TB')
         N = gv.protonode(self.G)
+        gv.setv(N, 'shape', 'record')
         E = gv.protoedge(self.G)
+        gv.setv(E, 'side', 'left')
 
     def insert_node(self):
         #get last line
@@ -124,7 +127,13 @@ class RushTree:
                 yield i
 
     def out_graph(self):
-        self.generate_graph(1,0)
+        if self.depth > 1:
+            self.generate_graph(1,0)
+        else:
+            first_node = self.get_node(1,0)
+            n = gv.node(self.G, first_node.string())
+            gv.setv(n, "label", "%s|%d" % (first_node.string(), first_node.weight))
+
         gv.layout(self.G, 'dot')
         #gv.render(self.G, 'xlib')
         gv.write(self.G, "tree.dot")
@@ -132,25 +141,22 @@ class RushTree:
     def generate_graph(self,depth,pos):
         left_child = self.get_leftchild(depth,pos)
         if left_child:
-            self.add_edge(self.get_node(depth,pos).string(), self.get_node(*left_child).string())
+            self.add_edge(self.get_node(depth,pos), self.get_node(*left_child))
             self.generate_graph(*left_child)
 
         right_child = self.get_rightchild(depth,pos)
         if right_child:
-            self.add_edge(self.get_node(depth,pos).string(), self.get_node(*right_child).string())
+            self.add_edge(self.get_node(depth,pos), self.get_node(*right_child))
             self.generate_graph(*right_child)
 
     def add_edge(self,a,b):
-        nodea = gv.node(self.G, a)
-        nodeb = gv.node(self.G, b)
-        e = gv.edge(nodea, nodeb)
-        gv.setv(e, 'side', 'left')
+        nodea = gv.node(self.G, a.string())
+        gv.setv(nodea, "label", "%s|%d" % (a.string(), a.weight))
+        nodeb = gv.node(self.G, b.string())
+        gv.setv(nodeb, "label", "%s|%d" % (b.string(), b.weight))
+        gv.edge(nodea, nodeb)
 
 
 
 t = RushTree()
-t.insert_node()
-t.insert_node()
-t.insert_node()
-t.insert_node()
 t.out_graph()
