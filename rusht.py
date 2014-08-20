@@ -1,6 +1,6 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4 et
 import collections
-import pygraphviz as pgv
+import gv
 import pdb
 LEAF, INTER = ("LEAF", "INTER")
 class Node:
@@ -24,7 +24,11 @@ class RushTree:
         #point to the last inserted
         self.last = 0
         #for draw
-        self.G = pgv.AGraph(directed=True)
+        self.G = gv.digraph("G")
+        gv.setv(self.G, 'nodesep', '0.05')
+        gv.setv(self.G, 'rankdir', 'TB')
+        N = gv.protonode(self.G)
+        E = gv.protoedge(self.G)
 
     def insert_node(self):
         #get last line
@@ -121,21 +125,26 @@ class RushTree:
 
     def out_graph(self):
         self.generate_graph(1,0)
-        print self.G
-        self.G.layout('dot')
-        self.G.draw('tree.png')
+        gv.layout(self.G, 'dot')
+        #gv.render(self.G, 'xlib')
+        gv.write(self.G, "tree.dot")
 
     def generate_graph(self,depth,pos):
         left_child = self.get_leftchild(depth,pos)
         if left_child:
-            self.G.add_edge(self.get_node(depth,pos).string(), self.get_node(*left_child).string())
+            self.add_edge(self.get_node(depth,pos).string(), self.get_node(*left_child).string())
             self.generate_graph(*left_child)
 
         right_child = self.get_rightchild(depth,pos)
         if right_child:
-            self.G.add_edge(self.get_node(depth,pos).string(), self.get_node(*right_child).string())
+            self.add_edge(self.get_node(depth,pos).string(), self.get_node(*right_child).string())
             self.generate_graph(*right_child)
 
+    def add_edge(self,a,b):
+        nodea = gv.node(self.G, a)
+        nodeb = gv.node(self.G, b)
+        e = gv.edge(nodea, nodeb)
+        gv.setv(e, 'side', 'left')
 
 
 
