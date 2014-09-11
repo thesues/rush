@@ -9,13 +9,13 @@ def solve(formula):
     Input formula is a string; output is a digit-filled-in string or None."""
     for f in fill_in(formula):
         if valid(f):
-            print f
+            return f
     
 def fill_in(formula):
     "Generate all possible fillings-in of letters in formula with digits."
-    letters = string.join(re.findall(r"[A-Za-z]",formula) , "")#should be a string
+    letters = set(string.join(re.findall(r"[A-Za-z]",formula) , ""))#should be a string
     for digits in itertools.permutations('1234567890', len(letters)):
-        table = string.maketrans(letters, ''.join(digits))
+        table = string.maketrans("".join(letters), ''.join(digits))
         yield formula.translate(table)
     
 def valid(f):
@@ -25,4 +25,5 @@ def valid(f):
         return not re.search(r'\b0[0-9]', f) and eval(f) is True
     except ArithmeticError:
         return False
-solve(" A**B  == CD")
+
+print solve('DONALD+GERALD==ROBERT')
