@@ -126,6 +126,19 @@ class RushTree:
             for i in self.iterate_LHR(*right_child):
                 yield i
 
+    
+    def iterate_LHR_N(self, depth, pos):
+        parent_nodes = []
+        n = (depth, pos)
+        while len(parent_nodes) > 0 or n != None:
+            if n != None:
+                parent_nodes.append(n)
+                n = self.get_leftchild(n[0], n[1])
+            else:
+                n = parent_nodes.pop()
+                yield self.get_node(n[0],n[1])
+                n = self.get_rightchild(n[0], n[1])
+            
     def out_graph(self):
         if self.depth > 1:
             self.generate_graph(1,0)
@@ -159,4 +172,10 @@ class RushTree:
 
 
 t = RushTree()
-t.out_graph()
+i = 0
+while i < 4:
+    t.insert_node()
+    i += 1
+#t.out_graph()
+for i in t.iterate_LHR_N(1,0):
+    print i.string()
